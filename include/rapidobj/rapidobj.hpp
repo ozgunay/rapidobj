@@ -4881,7 +4881,7 @@ struct FileReader : Reader {
         m_size   = size;
         m_buffer = buffer;
 
-        readahead(m_fd, offset, size);
+        //readahead(m_fd, offset, size);
 
         auto t2 = std::chrono::steady_clock::now();
 
@@ -7046,13 +7046,16 @@ inline Result ParseFile(const std::filesystem::path& filepath, const MaterialLib
     auto chunks = std::vector<Chunk>();
 
     auto t1 = std::chrono::steady_clock::now();
-
+#if defined(MAGNUM_TARGET_WEBGL)
+    ParseFileSequential(&file, &chunks, context);
+    
+ #else
     if (file.size() <= kSingleThreadCutoff) {
         ParseFileSequential(&file, &chunks, context);
     } else {
         ParseFileParallel(&file, &chunks, context);
     }
-
+#endif // CORRADE_TARGET_EMSCRIPTEN
     auto t2 = std::chrono::steady_clock::now();
 
     context->debug.parse.total_time = t2 - t1;
